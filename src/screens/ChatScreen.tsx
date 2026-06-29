@@ -113,10 +113,10 @@ export default function ChatScreen() {
       const messagesRef = ref(database, `chats/${chatId}/messages`);
       await push(messagesRef, {
         senderId: myUid,
-        text: messageText,
+        text: msgText,
         timestamp: Date.now(),
       });
-      sendPushNotification(messageText);
+      sendPushNotification(msgText);
     } catch (error) {
       console.error(error);
     }

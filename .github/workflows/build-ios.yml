@@ -48,6 +48,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             PROVISIONING_PROFILE_SPECIFIER="" \
             COMPILER_INDEX_STORE_ENABLE=NO \
+            CONFIGURATION_BUILD_DIR="$(pwd)/build/Release-iphoneos" \
             build | tee xcodebuild.log | xcpretty
 
       - name: Upload Build Log (if failed)
