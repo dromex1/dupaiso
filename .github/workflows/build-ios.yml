@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm install
@@ -28,9 +28,13 @@ jobs:
           cd ios
           pod install
 
+      - name: Install xcpretty
+        run: sudo gem install xcpretty
+
       - name: Build Unsigned iOS App
         run: |
           cd ios
+          set -o pipefail
           xcodebuild -workspace ChatApp.xcworkspace \
             -scheme ChatApp \
             -configuration Release \
@@ -41,7 +45,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             PROVISIONING_PROFILE_SPECIFIER="" \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build
+            build | xcpretty
 
       - name: Package into .ipa
         run: |
