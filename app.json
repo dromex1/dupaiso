@@ -28,8 +28,7 @@
           "photosPermission": "Ta aplikacja wymaga dostępu do zdjęć, abyś mógł zmienić swój awatar oraz wysyłać fotki w czacie.",
           "cameraPermission": "Ta aplikacja wymaga dostępu do aparatu."
         }
-      ],
-      "expo-notifications"
+      ]
     ]
   }
 }
