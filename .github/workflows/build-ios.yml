@@ -8,6 +8,8 @@ on:
 jobs:
   build-ios:
     runs-on: macos-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,9 +27,7 @@ jobs:
 
       - name: Fix Node path for Xcode build scripts
         run: |
-          # Xcode build scripts need to find Node - create .xcode.env.local
           echo "export NODE_BINARY=$(which node)" > ios/.xcode.env.local
-          # Also symlink for scripts that use /usr/local/bin/node directly
           sudo ln -sf $(which node) /usr/local/bin/node
 
       - name: Install CocoaPods
@@ -35,13 +35,24 @@ jobs:
           cd ios
           pod install
 
+      - name: Show ExpoModulesJSI build script (debug)
+        run: |
+          SCRIPT_FILE=$(find ios/Pods -name "Script-46EB2E0001A0D0.sh" 2>/dev/null | head -1)
+          if [ -n "$SCRIPT_FILE" ]; then
+            echo "=== ExpoModulesJSI build script ==="
+            cat "$SCRIPT_FILE"
+          else
+            echo "Script file not found, searching for any ExpoModulesJSI scripts..."
+            find ios/Pods -path "*ExpoModulesJSI*" -name "*.sh" | head -5
+          fi
+
       - name: Build Unsigned iOS App
         run: |
           cd ios
           set -o pipefail
           xcodebuild -workspace ChatApp.xcworkspace \
             -scheme ChatApp \
-            -configuration Release \
+            -configuration Debug \
             -sdk iphoneos \
             -destination "generic/platform=iOS" \
             CODE_SIGN_IDENTITY="" \
@@ -49,7 +60,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             PROVISIONING_PROFILE_SPECIFIER="" \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build 2>&1 | tee xcodebuild.log | tail -50
+            build 2>&1 | tee xcodebuild.log | tail -80
 
       - name: Upload Build Log (if failed)
         if: failure()
@@ -61,7 +72,7 @@ jobs:
       - name: Package into .ipa
         run: |
           mkdir -p Payload
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ChatApp.app" -type d -path "*/Release-iphoneos/*" | head -n 1)
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ChatApp.app" -type d -path "*/Debug-iphoneos/*" | head -n 1)
           echo "Found app at: $APP_PATH"
           cp -r "$APP_PATH" Payload/
           zip -r ChatApp.ipa Payload
