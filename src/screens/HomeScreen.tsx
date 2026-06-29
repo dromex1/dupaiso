@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Image } from 'react-native';
 import { colors } from '../theme/colors';
 import { ref, onValue, get, set } from 'firebase/database';
 import { database, auth } from '../../firebaseConfig';
@@ -130,11 +130,16 @@ export default function HomeScreen() {
   const renderFriend = ({ item }: { item: any }) => (
     <TouchableOpacity 
       style={styles.friendCard}
-      onPress={() => navigation.navigate('Chat', { friendId: item.uid, friendName: `${item.firstName} ${item.lastName}` })}
+      onPress={() => navigation.navigate('Chat', { friendId: item.uid, friendName: `${item.firstName} ${item.lastName}`, avatarUrl: item.avatarUrl })}
       activeOpacity={0.7}
     >
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{item.firstName?.charAt(0)}{item.lastName?.charAt(0)}</Text>
+        {item.avatarUrl ? (
+          <Image source={{ uri: item.avatarUrl }} style={styles.avatarImage} />
+        ) : (
+          <Text style={styles.avatarText}>{item.firstName?.charAt(0)}{item.lastName?.charAt(0)}</Text>
+        )}
+        {item.status === 'online' && <View style={styles.onlineIndicator} />}
       </View>
       <View style={styles.chatInfo}>
         <View style={styles.chatHeader}>
@@ -243,10 +248,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  avatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
   avatarText: {
     color: colors.text,
     fontSize: 18,
     fontWeight: '600',
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.success,
+    borderWidth: 2,
+    borderColor: colors.surface,
   },
   chatInfo: {
     flex: 1,
