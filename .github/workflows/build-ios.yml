@@ -55,7 +55,7 @@ jobs:
       - name: Manually Generate JS Bundle
         run: |
           echo "Generowanie kodu JS..."
-          npx react-native bundle --entry-file App.tsx --platform ios --dev false --bundle-output main.jsbundle --assets-dest assets_dest
+          npx expo export:embed --entry-file index.ts --platform ios --dev false --bundle-output main.jsbundle --assets-dest assets_dest
 
       - name: Package into .ipa
         run: |
