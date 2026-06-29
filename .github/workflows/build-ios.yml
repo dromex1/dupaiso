@@ -10,6 +10,7 @@ jobs:
     runs-on: macos-latest
     env:
       NODE_OPTIONS: --max-old-space-size=4096
+      EXPO_USE_SOURCE: "1"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,17 +36,6 @@ jobs:
           cd ios
           pod install
 
-      - name: Show ExpoModulesJSI build script (debug)
-        run: |
-          SCRIPT_FILE=$(find ios/Pods -name "Script-46EB2E0001A0D0.sh" 2>/dev/null | head -1)
-          if [ -n "$SCRIPT_FILE" ]; then
-            echo "=== ExpoModulesJSI build script ==="
-            cat "$SCRIPT_FILE"
-          else
-            echo "Script file not found, searching for any ExpoModulesJSI scripts..."
-            find ios/Pods -path "*ExpoModulesJSI*" -name "*.sh" | head -5
-          fi
-
       - name: Build Unsigned iOS App
         env:
           FORCE_BUNDLING: "1"
@@ -62,7 +52,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             PROVISIONING_PROFILE_SPECIFIER="" \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build 2>&1 | tee xcodebuild.log | tail -80
+            build 2>&1 | tee xcodebuild.log | tail -100
 
       - name: Upload Build Log (if failed)
         if: failure()

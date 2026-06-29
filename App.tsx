@@ -5,8 +5,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { ref, onValue, onDisconnect, set, update } from 'firebase/database';
 import { auth, database } from './firebaseConfig';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { Platform, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { MessageCircle, Search, UserPlus, User as UserIcon } from 'lucide-react-native';
 
@@ -22,44 +20,6 @@ import ChatScreen from './src/screens/ChatScreen';
 // Typy
 import { RootStackParamList, MainTabParamList } from './src/types/navigation';
 import { colors } from './src/theme/colors';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
-async function registerForPushNotificationsAsync() {
-  let token;
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-  }
-
-  if (Device.isDevice || Platform.OS === 'web') {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== 'granted') {
-      return undefined;
-    }
-    try {
-      token = (await Notifications.getExpoPushTokenAsync({ projectId: 'b5671186-07ce-45fa-bb26-ecbe817e0bda' })).data;
-    } catch (e) {
-      console.log('Push token error:', e);
-    }
-  }
-  return token;
-}
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -124,15 +84,6 @@ export default function App() {
       setLoading(false);
 
       if (currentUser) {
-        // Rejestracja powiadomień Push
-        if (Platform.OS !== 'web') {
-          registerForPushNotificationsAsync().then(token => {
-            if (token) {
-              update(ref(database, `users/${currentUser.uid}`), { pushToken: token });
-            }
-          });
-        }
-
         // System Obecności (Presence System)
         const myConnectionsRef = ref(database, `users/${currentUser.uid}/status`);
         const connectedRef = ref(database, '.info/connected');
