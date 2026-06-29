@@ -47,6 +47,8 @@ jobs:
           fi
 
       - name: Build Unsigned iOS App
+        env:
+          FORCE_BUNDLING: "1"
         run: |
           cd ios
           set -o pipefail
