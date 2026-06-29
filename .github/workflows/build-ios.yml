@@ -48,7 +48,6 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             PROVISIONING_PROFILE_SPECIFIER="" \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            CONFIGURATION_BUILD_DIR="$(pwd)/build/Release-iphoneos" \
             build | tee xcodebuild.log | xcpretty
 
       - name: Upload Build Log (if failed)
@@ -61,7 +60,10 @@ jobs:
       - name: Package into .ipa
         run: |
           mkdir -p Payload
-          mv ios/build/Release-iphoneos/ChatApp.app Payload/
+          # Znajdź plik ChatApp.app wygenerowany w DerivedData
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ChatApp.app" -type d | head -n 1)
+          echo "Found app at: $APP_PATH"
+          cp -r "$APP_PATH" Payload/
           zip -r ChatApp.ipa Payload
           
       - name: Upload IPA Artifact
