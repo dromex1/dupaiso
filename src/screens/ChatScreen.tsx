@@ -26,7 +26,7 @@ export default function ChatScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const [friendStatus, setFriendStatus] = useState<string>('offline');
   const flatListRef = useRef<FlatList>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
 
   const myUid = auth.currentUser?.uid || '';
