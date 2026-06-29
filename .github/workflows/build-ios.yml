@@ -3,7 +3,7 @@ name: Build iOS IPA
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Pozwala na ręczne odpalenie budowania!
+  workflow_dispatch:
 
 jobs:
   build-ios:
@@ -20,19 +20,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Fix Node path for Xcode
-        run: sudo ln -s $(which node) /usr/local/bin/node || true
-
       - name: Expo Prebuild (Generate iOS project)
         run: npx expo prebuild --platform ios --clean
+
+      - name: Fix Node path for Xcode build scripts
+        run: |
+          # Xcode build scripts need to find Node - create .xcode.env.local
+          echo "export NODE_BINARY=$(which node)" > ios/.xcode.env.local
+          # Also symlink for scripts that use /usr/local/bin/node directly
+          sudo ln -sf $(which node) /usr/local/bin/node
 
       - name: Install CocoaPods
         run: |
           cd ios
           pod install
-
-      - name: Install xcpretty
-        run: sudo gem install xcpretty
 
       - name: Build Unsigned iOS App
         run: |
@@ -48,7 +49,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             PROVISIONING_PROFILE_SPECIFIER="" \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build | tee xcodebuild.log | xcpretty
+            build 2>&1 | tee xcodebuild.log | tail -50
 
       - name: Upload Build Log (if failed)
         if: failure()
@@ -60,8 +61,7 @@ jobs:
       - name: Package into .ipa
         run: |
           mkdir -p Payload
-          # Znajdź plik ChatApp.app wygenerowany w DerivedData
-          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ChatApp.app" -type d | head -n 1)
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "ChatApp.app" -type d -path "*/Release-iphoneos/*" | head -n 1)
           echo "Found app at: $APP_PATH"
           cp -r "$APP_PATH" Payload/
           zip -r ChatApp.ipa Payload
