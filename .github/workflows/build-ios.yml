@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Fix Node path for Xcode
+        run: sudo ln -s $(which node) /usr/local/bin/node || true
+
       - name: Expo Prebuild (Generate iOS project)
         run: npx expo prebuild --platform ios --clean
 
@@ -45,7 +48,14 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             PROVISIONING_PROFILE_SPECIFIER="" \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            build | xcpretty
+            build | tee xcodebuild.log | xcpretty
+
+      - name: Upload Build Log (if failed)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xcode-Build-Log
+          path: ios/xcodebuild.log
 
       - name: Package into .ipa
         run: |
